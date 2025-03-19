@@ -1,21 +1,35 @@
-from app import app, db, User, Task, TaskStatus
+from app import app, db
+from models import User, Task, TaskStatus, UserRole
 from datetime import datetime
 
 def seed_database():
     with app.app_context():
-        # Drop all tables and recreate them
+        
         db.drop_all()
         db.create_all()
 
-        # Create users
-        user1 = User(username="john_doe", email="john@example.com")
-        user2 = User(username="jane_doe", email="jane@example.com")
+        
+        user1 = User(
+            username="admin",
+            email="admin@example.com",
+            name="Admin User",
+            role=UserRole.ADMIN
+        )
+        user1.set_password("admin123")  
+
+        user2 = User(
+            username="user1",
+            email="user1@example.com",
+            name="Regular User",
+            role=UserRole.USER
+        )
+        user2.set_password("user123") 
 
         db.session.add(user1)
         db.session.add(user2)
         db.session.commit()
 
-        # Create tasks
+        
         task1 = Task(
             title="Complete project report",
             description="Finish the final project report and submit it by the deadline.",
@@ -32,17 +46,8 @@ def seed_database():
             user_id=user2.id
         )
 
-        task3 = Task(
-            title="Review code",
-            description="Review and refactor the codebase for better performance.",
-            due_date=datetime(2023, 12, 20),
-            status=TaskStatus.PENDING,
-            user_id=user1.id
-        )
-
         db.session.add(task1)
         db.session.add(task2)
-        db.session.add(task3)
         db.session.commit()
 
         print("Database seeded successfully!")
