@@ -180,7 +180,7 @@ def update_task(id):
         task.description = data["description"]
         task.due_date = datetime.fromisoformat(data["due_date"])
         task.status = TaskStatus(data.get("status", task.status.value))
-        task.user_id = get_jwt_identity()  # Ensure the task belongs to the logged-in user
+        task.user_id = get_jwt_identity() 
         db.session.commit()
         return jsonify({
             "message": "Task updated successfully",
