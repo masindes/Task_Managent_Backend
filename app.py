@@ -2,7 +2,7 @@ from flask import Flask, request, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from datetime import datetime
-from enum import Enum
+from models import User, Task,TaskStatus
 import os
 
 # Initialize Flask app
@@ -16,45 +16,6 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 migrate = Migrate(app, db)
 
-# Enum for task status
-class TaskStatus(Enum):
-    PENDING = "Pending"
-    IN_PROGRESS = "In Progress"
-    COMPLETED = "Completed"
-
-# User model
-class User(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(80), unique=True, nullable=False)
-    email = db.Column(db.String(120), unique=True, nullable=False)
-    tasks = db.relationship('Task', backref='user', lazy=True)  
-
-    def to_dict(self):
-        return {
-            "id": self.id,
-            "username": self.username,
-            "email": self.email,
-            "tasks": [task.to_dict() for task in self.tasks] 
-        }
-
-# Task model
-class Task(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    title = db.Column(db.String(100), nullable=False)
-    description = db.Column(db.String(500), nullable=False)
-    due_date = db.Column(db.Date, nullable=False)
-    status = db.Column(db.Enum(TaskStatus), nullable=False, default=TaskStatus.PENDING)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)  
-
-    def to_dict(self):
-        return {
-            "id": self.id,
-            "title": self.title,
-            "description": self.description,
-            "due_date": self.due_date.isoformat(),
-            "status": self.status.value,
-            "user_id": self.user_id  
-        }
 
 # Helper function to validate task data
 def validate_task_data(data):
@@ -66,13 +27,21 @@ def validate_task_data(data):
         return False
     return True
 
-# Routes
+# Routes for Users
 @app.route("/users", methods=["GET"])
 def get_users():
     users = User.query.all()
     return jsonify({
         "message": "Users retrieved successfully",
         "data": [user.to_dict() for user in users]
+    }), 200
+
+@app.route("/users/<int:id>", methods=["GET"])
+def get_user(id):
+    user = User.query.get_or_404(id)
+    return jsonify({
+        "message": "User retrieved successfully",
+        "data": user.to_dict()
     }), 200
 
 @app.route("/users", methods=["POST"])
@@ -96,6 +65,49 @@ def create_user():
         db.session.rollback()
         return jsonify({"error": str(e)}), 500
 
+@app.route("/users/<int:id>", methods=["PUT"])
+def update_user(id):
+    user = User.query.get_or_404(id)
+    data = request.get_json()
+
+    if not data:
+        return jsonify({"error": "No data provided"}), 400
+
+    try:
+        if "username" in data:
+            user.username = data["username"]
+        if "email" in data:
+            user.email = data["email"]
+
+        db.session.commit()
+        return jsonify({
+            "message": "User updated successfully",
+            "data": user.to_dict()
+        }), 200
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"error": str(e)}), 500
+
+@app.route("/users/<int:id>", methods=["DELETE"])
+def delete_user(id):
+    user = User.query.get_or_404(id)
+
+    try:
+        # Delete all tasks associated with the user
+        Task.query.filter_by(user_id=id).delete()
+        
+        # Delete the user
+        db.session.delete(user)
+        db.session.commit()
+        return jsonify({
+            "message": "User deleted successfully",
+            "data": user.to_dict()
+        }), 200
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"error": str(e)}), 500
+
+# Routes for Tasks
 @app.route("/tasks", methods=["GET"])
 def get_tasks():
     tasks = Task.query.all()
