@@ -129,7 +129,7 @@ def update_task(id):
         task.description = data["description"]
         task.due_date = datetime.fromisoformat(data["due_date"])
         task.status = TaskStatus(data.get("status", task.status.value))
-        task.user_id = data.get("user_id", task.user_id)  # Update user_id if provided
+        task.user_id = data.get("user_id", task.user_id)  
         db.session.commit()
         return jsonify(task.to_dict()), 200
     except Exception as e:
