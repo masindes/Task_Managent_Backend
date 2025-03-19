@@ -1,13 +1,42 @@
 from flask import Flask, request, jsonify
+from flask_sqlalchemy import SQLAlchemy
+from flask_migrate import Migrate
 from datetime import datetime
-from models import db, Task, TaskStatus
+from enum import Enum
 
+# Initialize Flask app
 app = Flask(__name__)
 
 # Database configuration
 app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://username:password@localhost/task_management'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-db.init_app(app)
+
+# Initialize SQLAlchemy and Flask-Migrate
+db = SQLAlchemy(app)
+migrate = Migrate(app, db)
+
+# Enum for task status
+class TaskStatus(Enum):
+    PENDING = "Pending"
+    IN_PROGRESS = "In Progress"
+    COMPLETED = "Completed"
+
+# Task model
+class Task(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String(100), nullable=False)
+    description = db.Column(db.String(500), nullable=False)
+    due_date = db.Column(db.Date, nullable=False)
+    status = db.Column(db.Enum(TaskStatus), nullable=False, default=TaskStatus.PENDING)
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "title": self.title,
+            "description": self.description,
+            "due_date": self.due_date.isoformat(),
+            "status": self.status.value
+        }
 
 # Helper function to validate task data
 def validate_task_data(data):
@@ -94,7 +123,7 @@ def mark_task_completed(id):
         db.session.rollback()
         return jsonify({"error": str(e)}), 500
 
-# Error handler
+# Error handlers
 @app.errorhandler(404)
 def not_found(error):
     return jsonify({"error": "Resource not found"}), 404
@@ -103,5 +132,6 @@ def not_found(error):
 def internal_error(error):
     return jsonify({"error": "Internal server error"}), 500
 
+# Run the application
 if __name__ == "__main__":
     app.run(debug=True)
