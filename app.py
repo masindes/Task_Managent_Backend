@@ -70,7 +70,10 @@ def validate_task_data(data):
 @app.route("/users", methods=["GET"])
 def get_users():
     users = User.query.all()
-    return jsonify([user.to_dict() for user in users]), 200
+    return jsonify({
+        "message": "Users retrieved successfully",
+        "data": [user.to_dict() for user in users]
+    }), 200
 
 @app.route("/users", methods=["POST"])
 def create_user():
@@ -85,7 +88,10 @@ def create_user():
         )
         db.session.add(new_user)
         db.session.commit()
-        return jsonify(new_user.to_dict()), 201
+        return jsonify({
+            "message": "User created successfully",
+            "data": new_user.to_dict()
+        }), 201
     except Exception as e:
         db.session.rollback()
         return jsonify({"error": str(e)}), 500
@@ -93,7 +99,10 @@ def create_user():
 @app.route("/tasks", methods=["GET"])
 def get_tasks():
     tasks = Task.query.all()
-    return jsonify([task.to_dict() for task in tasks]), 200
+    return jsonify({
+        "message": "Tasks retrieved successfully",
+        "data": [task.to_dict() for task in tasks]
+    }), 200
 
 @app.route("/tasks", methods=["POST"])
 def create_task():
@@ -111,7 +120,10 @@ def create_task():
         )
         db.session.add(new_task)
         db.session.commit()
-        return jsonify(new_task.to_dict()), 201
+        return jsonify({
+            "message": "Task created successfully",
+            "data": new_task.to_dict()
+        }), 201
     except Exception as e:
         db.session.rollback()
         return jsonify({"error": str(e)}), 500
@@ -131,7 +143,10 @@ def update_task(id):
         task.status = TaskStatus(data.get("status", task.status.value))
         task.user_id = data.get("user_id", task.user_id)  
         db.session.commit()
-        return jsonify(task.to_dict()), 200
+        return jsonify({
+            "message": "Task updated successfully",
+            "data": task.to_dict()
+        }), 200
     except Exception as e:
         db.session.rollback()
         return jsonify({"error": str(e)}), 500
@@ -143,7 +158,10 @@ def delete_task(id):
     try:
         db.session.delete(task)
         db.session.commit()
-        return jsonify({"message": "Task deleted successfully"}), 200
+        return jsonify({
+            "message": "Task deleted successfully",
+            "data": task.to_dict()
+        }), 200
     except Exception as e:
         db.session.rollback()
         return jsonify({"error": str(e)}), 500
@@ -155,7 +173,10 @@ def mark_task_completed(id):
     try:
         task.status = TaskStatus.COMPLETED
         db.session.commit()
-        return jsonify(task.to_dict()), 200
+        return jsonify({
+            "message": "Task marked as completed",
+            "data": task.to_dict()
+        }), 200
     except Exception as e:
         db.session.rollback()
         return jsonify({"error": str(e)}), 500
