@@ -27,14 +27,14 @@ class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(80), unique=True, nullable=False)
     email = db.Column(db.String(120), unique=True, nullable=False)
-    tasks = db.relationship('Task', backref='user', lazy=True)  # One-to-many relationship with Task
+    tasks = db.relationship('Task', backref='user', lazy=True)  
 
     def to_dict(self):
         return {
             "id": self.id,
             "username": self.username,
             "email": self.email,
-            "tasks": [task.to_dict() for task in self.tasks]  # Include tasks in the user's JSON representation
+            "tasks": [task.to_dict() for task in self.tasks] 
         }
 
 # Task model
@@ -44,7 +44,7 @@ class Task(db.Model):
     description = db.Column(db.String(500), nullable=False)
     due_date = db.Column(db.Date, nullable=False)
     status = db.Column(db.Enum(TaskStatus), nullable=False, default=TaskStatus.PENDING)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)  # Foreign key to User
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)  
 
     def to_dict(self):
         return {
@@ -53,7 +53,7 @@ class Task(db.Model):
             "description": self.description,
             "due_date": self.due_date.isoformat(),
             "status": self.status.value,
-            "user_id": self.user_id  # Include user_id in the task's JSON representation
+            "user_id": self.user_id  
         }
 
 # Helper function to validate task data
@@ -107,7 +107,7 @@ def create_task():
             description=data["description"],
             due_date=datetime.fromisoformat(data["due_date"]),
             status=TaskStatus(data.get("status", TaskStatus.PENDING.value)),
-            user_id=data.get("user_id")  # Associate task with a user
+            user_id=data.get("user_id") 
         )
         db.session.add(new_task)
         db.session.commit()

@@ -1,8 +1,8 @@
 """Add User model and user_id to Task
 
-Revision ID: df6c23244b04
+Revision ID: 9dc36bb35a79
 Revises: 
-Create Date: 2025-03-19 20:40:54.242001
+Create Date: 2025-03-19 20:57:26.671136
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = 'df6c23244b04'
+revision = '9dc36bb35a79'
 down_revision = None
 branch_labels = None
 depends_on = None
