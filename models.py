@@ -15,9 +15,9 @@ class UserRole(Enum):
 
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(80), unique=True, nullable=False)
-    email = db.Column(db.String(120), unique=True, nullable=False)
-    name = db.Column(db.String(120), nullable=False)
+    username = db.Column(db.String, unique=True, nullable=False)
+    email = db.Column(db.String, unique=True, nullable=False)
+    name = db.Column(db.String, nullable=False)
     password_hash = db.Column(db.String, nullable=False)
     role = db.Column(db.Enum(UserRole), nullable=False, default=UserRole.USER)
     tasks = db.relationship('Task', backref='user', lazy=True)
