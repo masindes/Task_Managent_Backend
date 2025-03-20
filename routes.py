@@ -1,9 +1,9 @@
 from flask import request, jsonify
 from datetime import datetime
-from app import app, db, jwt
+from app import app, db
 from models import User, Task, TaskStatus, UserRole
 from werkzeug.security import generate_password_hash
-from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity
+
 
 def validate_task_data(data):
     if not data.get("title") or not data.get("description") or not data.get("due_date"):
@@ -13,35 +13,6 @@ def validate_task_data(data):
     except ValueError:
         return False
     return True
-
-
-@app.route("/login", methods=["POST"])
-def login():
-    data = request.get_json()
-    if not data.get("username") or not data.get("password"):
-        return jsonify({"error": "Username and password are required"}), 400
-
-    user = User.query.filter_by(username=data["username"]).first()
-    if not user or not user.check_password(data["password"]):
-        return jsonify({"error": "Invalid username or password"}), 401
-
-    # Generate a JWT token
-    token = user.generate_token()
-    return jsonify({
-        "message": "Login successful",
-        "token": token
-    }), 200
-
-
-@app.route("/protected", methods=["GET"])
-@jwt_required()
-def protected():
-    current_user_id = get_jwt_identity()
-    user = User.query.get(current_user_id)
-    return jsonify({
-        "message": "You are authenticated",
-        "user": user.to_dict()
-    }), 200
 
 
 @app.route("/users", methods=["GET"])
@@ -71,9 +42,9 @@ def create_user():
             username=data["username"],
             email=data["email"],
             name=data["name"],
-            role=UserRole(data.get("role", UserRole.USER.value))  
+            role=UserRole(data.get("role", UserRole.USER.value)) 
         )
-        new_user.set_password(data["password"])  
+        new_user.set_password(data["password"])
         db.session.add(new_user)
         db.session.commit()
         return jsonify({
@@ -102,7 +73,7 @@ def update_user(id):
         if "role" in data:
             user.role = UserRole(data["role"])
         if "password" in data:
-            user.set_password(data["password"])  
+            user.set_password(data["password"]) 
 
         db.session.commit()
         return jsonify({
@@ -118,10 +89,10 @@ def delete_user(id):
     user = User.query.get_or_404(id)
 
     try:
-        # Delete all tasks associated with the user
+        
         Task.query.filter_by(user_id=id).delete()
         
-        # Delete the user
+    
         db.session.delete(user)
         db.session.commit()
         return jsonify({
@@ -141,8 +112,8 @@ def get_tasks():
         "data": [task.to_dict() for task in tasks]
     }), 200
 
+
 @app.route("/tasks", methods=["POST"])
-@jwt_required()
 def create_task():
     data = request.get_json()
     if not validate_task_data(data):
@@ -154,7 +125,7 @@ def create_task():
             description=data["description"],
             due_date=datetime.fromisoformat(data["due_date"]),
             status=TaskStatus(data.get("status", TaskStatus.PENDING.value)),
-            user_id=get_jwt_identity()  # Associate task with the logged-in user
+            user_id=data.get("user_id") 
         )
         db.session.add(new_task)
         db.session.commit()
@@ -167,7 +138,6 @@ def create_task():
         return jsonify({"error": str(e)}), 500
 
 @app.route("/tasks/<int:id>", methods=["PUT"])
-@jwt_required()
 def update_task(id):
     task = Task.query.get_or_404(id)
 
@@ -180,7 +150,7 @@ def update_task(id):
         task.description = data["description"]
         task.due_date = datetime.fromisoformat(data["due_date"])
         task.status = TaskStatus(data.get("status", task.status.value))
-        task.user_id = get_jwt_identity() 
+        task.user_id = data.get("user_id", task.user_id)  
         db.session.commit()
         return jsonify({
             "message": "Task updated successfully",
@@ -191,7 +161,6 @@ def update_task(id):
         return jsonify({"error": str(e)}), 500
 
 @app.route("/tasks/<int:id>", methods=["DELETE"])
-@jwt_required()
 def delete_task(id):
     task = Task.query.get_or_404(id)
 
@@ -207,7 +176,6 @@ def delete_task(id):
         return jsonify({"error": str(e)}), 500
 
 @app.route("/tasks/<int:id>/complete", methods=["PATCH"])
-@jwt_required()
 def mark_task_completed(id):
     task = Task.query.get_or_404(id)
 
