@@ -18,7 +18,7 @@ class User(db.Model):
     username = db.Column(db.String, unique=True, nullable=False)
     email = db.Column(db.String, unique=True, nullable=False)
     name = db.Column(db.String, nullable=False)
-    password_hash = db.Column(db.String, nullable=False)
+    password_hash = db.Column(db.String(500), nullable=False)
     role = db.Column(db.Enum(UserRole), nullable=False, default=UserRole.USER)
     tasks = db.relationship('Task', backref='user', lazy=True)
 
