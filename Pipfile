@@ -11,6 +11,7 @@ flask-migrate = "==4.0.4"
 cors = "*"
 psycopg2-binary = "*"
 python-dotenv = "*"
+gunicorn = "*"
 
 [dev-packages]
 
