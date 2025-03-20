@@ -12,6 +12,7 @@ cors = "*"
 psycopg2-binary = "*"
 python-dotenv = "*"
 gunicorn = "*"
+flask-jwt-extended = "*"
 
 [dev-packages]
 
