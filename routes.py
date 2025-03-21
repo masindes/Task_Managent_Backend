@@ -16,8 +16,8 @@ def validate_task_data(data):
 
 
 def is_admin():
-    current_user_id = get_jwt_identity()  
-    user = User.query.get(int(current_user_id))  
+    current_user_id = get_jwt_identity()
+    user = User.query.get(int(current_user_id))
     return user.role == UserRole.ADMIN
 
 
@@ -49,7 +49,7 @@ def get_users():
 @jwt_required()
 def get_user(id):
     current_user_id = get_jwt_identity()
-    if int(current_user_id) != id and not is_admin(): 
+    if int(current_user_id) != id and not is_admin():
         return jsonify({"error": "Unauthorized access"}), 403
 
     user = User.query.get_or_404(id)
@@ -67,7 +67,7 @@ def create_user():
             username=data["username"],
             email=data["email"],
             name=data["name"],
-            role=UserRole(data.get("role", UserRole.USER.value))  
+            role=UserRole(data.get("role", UserRole.USER.value))
         )
         new_user.set_password(data["password"])
         db.session.add(new_user)
@@ -82,7 +82,7 @@ def create_user():
 @jwt_required()
 def update_user(id):
     current_user_id = get_jwt_identity()
-    if int(current_user_id) != id and not is_admin(): 
+    if int(current_user_id) != id and not is_admin():
         return jsonify({"error": "Unauthorized access"}), 403
 
     user = User.query.get_or_404(id)
@@ -119,7 +119,7 @@ def delete_user(id):
 
     user = User.query.get_or_404(id)
     try:
-        Task.query.filter_by(user_id=id).delete()  
+        Task.query.filter_by(user_id=id).delete()
         db.session.delete(user)
         db.session.commit()
         return jsonify({"message": "User deleted successfully", "data": user.to_dict()}), 200
@@ -135,7 +135,7 @@ def get_tasks():
     if is_admin():
         tasks = Task.query.all()
     else:
-        tasks = Task.query.filter_by(user_id=int(current_user_id)).all() 
+        tasks = Task.query.filter_by(user_id=int(current_user_id)).all()
     return jsonify({"message": "Tasks retrieved successfully", "data": [task.to_dict() for task in tasks]}), 200
 
 
@@ -153,7 +153,7 @@ def create_task():
             description=data["description"],
             due_date=datetime.fromisoformat(data["due_date"]),
             status=TaskStatus(data.get("status", TaskStatus.PENDING.value)),
-            user_id=int(current_user_id) 
+            user_id=int(current_user_id)
         )
         db.session.add(new_task)
         db.session.commit()
@@ -167,11 +167,7 @@ def create_task():
 @jwt_required()
 def get_task(id):
     current_user_id = get_jwt_identity()
-
-    # Check if the current user is authorized to view the task
     task = Task.query.get_or_404(id)
-
-    # If the user is not the task's owner and not an admin, deny access
     if task.user_id != int(current_user_id) and not is_admin():
         return jsonify({"error": "Unauthorized access"}), 403
 
@@ -184,7 +180,7 @@ def update_task(id):
     task = Task.query.get_or_404(id)
     current_user_id = get_jwt_identity()
 
-    if task.user_id != int(current_user_id) and not is_admin(): 
+    if task.user_id != int(current_user_id) and not is_admin():
         return jsonify({"error": "Unauthorized access"}), 403
 
     data = request.get_json()
@@ -211,7 +207,7 @@ def delete_task(id):
     task = Task.query.get_or_404(id)
     current_user_id = get_jwt_identity()
 
-    if task.user_id != int(current_user_id) and not is_admin():  
+    if task.user_id != int(current_user_id) and not is_admin():
         return jsonify({"error": "Unauthorized access"}), 403
 
     try:
@@ -229,7 +225,7 @@ def mark_task_completed(id):
     task = Task.query.get_or_404(id)
     current_user_id = get_jwt_identity()
 
-    if task.user_id != int(current_user_id) and not is_admin(): 
+    if task.user_id != int(current_user_id) and not is_admin():
         return jsonify({"error": "Unauthorized access"}), 403
 
     try:
@@ -244,6 +240,7 @@ def mark_task_completed(id):
 @app.errorhandler(404)
 def not_found(error):
     return jsonify({"error": "Resource not found"}), 404
+
 
 @app.errorhandler(500)
 def internal_error(error):
