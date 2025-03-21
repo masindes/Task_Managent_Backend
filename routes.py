@@ -31,7 +31,6 @@ def login():
     if not user or not user.check_password(data["password"]):
         return jsonify({"error": "Invalid username or password"}), 401
 
-    
     token = create_access_token(identity=str(user.id))
     return jsonify({"token": token}), 200
 
@@ -162,6 +161,21 @@ def create_task():
     except Exception as e:
         db.session.rollback()
         return jsonify({"error": str(e)}), 500
+
+
+@app.route("/tasks/<int:id>", methods=["GET"])
+@jwt_required()
+def get_task(id):
+    current_user_id = get_jwt_identity()
+
+    # Check if the current user is authorized to view the task
+    task = Task.query.get_or_404(id)
+
+    # If the user is not the task's owner and not an admin, deny access
+    if task.user_id != int(current_user_id) and not is_admin():
+        return jsonify({"error": "Unauthorized access"}), 403
+
+    return jsonify({"message": "Task retrieved successfully", "data": task.to_dict()}), 200
 
 
 @app.route("/tasks/<int:id>", methods=["PUT"])
